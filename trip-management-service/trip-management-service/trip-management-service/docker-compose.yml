@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+
+  postgres-trip:
+    image: postgres:15-alpine
+    container_name: postgres-trip
+    environment:
+      POSTGRES_DB: trip_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - trip_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+
+  trip-management-service:
+    build: .
+    container_name: trip-management-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-trip:5432/trip_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      PRICING_SERVICE_URL: http://pricing-discount-service:8082
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+    depends_on:
+      postgres-trip:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+
+volumes:
+  trip_pg_data:

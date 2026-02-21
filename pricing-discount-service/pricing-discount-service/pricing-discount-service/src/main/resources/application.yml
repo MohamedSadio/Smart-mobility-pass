@@ -1,0 +1,70 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: pricing-discount-service
+
+  config:
+    import: "optional:configserver:http://localhost:8888"
+
+  cloud:
+    config:
+      fail-fast: false
+      retry:
+        max-attempts: 3
+        initial-interval: 1000
+
+# Eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 10
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+# Pricing Rules
+pricing:
+  rules:
+    base-rate-per-km: 100
+    off-peak:
+      enabled: true
+      discount-rate: 0.10
+      start-hour: 20
+      end-hour: 6
+    loyalty:
+      enabled: true
+      discount-rate: 0.05
+      min-trips: 10
+    daily-cap: 3000
+
+# Logging
+logging:
+  level:
+    com.smartmobility.pricing: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+  file:
+    name: logs/pricing-discount-service.log
