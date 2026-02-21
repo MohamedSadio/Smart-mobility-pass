@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+
+  pricing-discount-service:
+    build: .
+    container_name: pricing-discount-service
+    ports:
+      - "8082:8082"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+    depends_on:
+      - zipkin
