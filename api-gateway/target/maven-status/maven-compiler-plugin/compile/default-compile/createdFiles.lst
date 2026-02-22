@@ -1,0 +1,4 @@
+com/smartmobility/apigateway/controller/FallbackController.class
+com/smartmobility/apigateway/ApiGatewayApplication.class
+com/smartmobility/apigateway/config/SecurityConfig.class
+com/smartmobility/apigateway/filter/JwtGlobalFilter.class
