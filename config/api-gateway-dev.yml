@@ -1,0 +1,63 @@
+# Ajouts de Aziz — Configuration globale Gateway, Routing, Résilience, JWT, Zipkin — 2026-02-21
+server:
+  port: 8080
+
+gateway:
+  security:
+    jwt:
+      secret: "U21hcnRNb2JpbGl0eVNlY3JldEtleUZvckp3dDIwMjYhQW5kQmV5b25k"
+
+
+spring:
+  cloud:
+    gateway:
+      default-filters:
+        - AddRequestHeader=X-Request-Source, API-GATEWAY
+      routes:
+        - id: user-mobility-pass-service
+          uri: lb://user-mobility-pass-service
+          predicates:
+            - Path=/api/users/**, /api/passes/**
+        - id: trip-management-service
+          uri: lb://trip-management-service
+          predicates:
+            - Path=/api/trips/**
+        - id: pricing-discount-service
+          uri: lb://pricing-discount-service
+          predicates:
+            - Path=/api/pricing/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: pricingCB
+                fallbackUri: forward:/fallback/pricing
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+    instances:
+      pricingCB:
+        baseConfig: default
+
+eureka:
+  client:
+    serviceUrl:
+# Ajouts de Abdoul — Configuration Eureka URL dynamique — 2026-02-21
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
