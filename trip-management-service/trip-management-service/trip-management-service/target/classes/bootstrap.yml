@@ -1,4 +1,4 @@
-# fix(config): import configserver local (localhost) au lieu de Docker 2026-02-22
+# Ajouts de Aziz — Import du serveur de config au démarrage (bootstrap) — 2026-02-21
 spring:
   config:
-    import: "optional:configserver:http://localhost:8888"
+    import: "optional:configserver:http://config-server:8888"
