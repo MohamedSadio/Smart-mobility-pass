@@ -15,8 +15,8 @@
     <name>eureka-server</name>
     <description>Eureka Discovery Server</description>
     <properties>
-        <!-- chore(pom): java.version fixe 17 2026-02-22 -->
-        <java.version>17</java.version>
+<!-- Ajouts de Abdoul — fallback java.version — 2026-02-21 -->
+        <java.version>${java.version:17}</java.version>
         <spring-cloud.version>2023.0.0</spring-cloud.version>
     </properties>
     <dependencies>
