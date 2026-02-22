@@ -1,8 +1,0 @@
-# Ajouts de Aziz — Configuration locale Eureka Server pointant vers config-server — 2026-02-21
-spring:
-  application:
-    name: eureka-server
-  profiles:
-    active: dev
-  config:
-    import: "optional:configserver:http://localhost:8888"
