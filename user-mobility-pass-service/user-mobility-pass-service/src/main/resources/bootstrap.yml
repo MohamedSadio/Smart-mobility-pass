@@ -1,0 +1,5 @@
+# Ajouts de Aziz — Import du serveur de config au démarrage (bootstrap) — 2026-02-21
+# fix(config): import configserver local (localhost) au lieu de Docker 2026-02-22
+spring:
+  config:
+    import: "optional:configserver:http://localhost:8888"
