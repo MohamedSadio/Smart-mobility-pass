@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/user-mobility-pass/api/users")
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {
