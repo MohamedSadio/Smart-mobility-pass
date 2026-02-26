@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/pricing")
+@RequestMapping("/pricing-discount/pricing")
 @RequiredArgsConstructor
 @Slf4j
 public class PricingController {
