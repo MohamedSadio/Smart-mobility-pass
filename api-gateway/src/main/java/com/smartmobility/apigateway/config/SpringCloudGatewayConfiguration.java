@@ -24,6 +24,9 @@ public class SpringCloudGatewayConfiguration {
                 .route(p->p
                         .path("/user-mobility-pass/**")
                         .uri("lb://user-mobility-pass-service"))
+                .route(p->p
+                        .path("/pricing-discount/**")
+                        .uri("lb://pricing-discount-service"))
 
                 .build();
     }
