@@ -6,6 +6,9 @@
       <list>
         <option value="$PROJECT_DIR$/config-server/config-server/pom.xml" />
         <option value="$PROJECT_DIR$/user-mobility-pass-service/user-mobility-pass-service/pom.xml" />
+        <option value="$PROJECT_DIR$/pricing-discount-service/pom.xml" />
+        <option value="$PROJECT_DIR$/eureka-server/pom.xml" />
+        <option value="$PROJECT_DIR$/api-gateway/pom.xml" />
       </list>
     </option>
   </component>

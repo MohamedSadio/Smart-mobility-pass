@@ -23,9 +23,13 @@ public class SpringCloudGatewayConfiguration {
                         .uri("http://httpbin.org:80"))
                 .route(p->p
                         .path("/user-mobility-pass/**")
+                        // On retire "/pricing-discount" du chemin avant d'envoyer au microservice
+                        .filters(f -> f.rewritePath("/user-mobility-pass/(?<segment>.*)", "/${segment}"))
                         .uri("lb://user-mobility-pass-service"))
                 .route(p->p
                         .path("/pricing-discount/**")
+                        // On retire "/pricing-discount" du chemin avant d'envoyer au microservice
+                        .filters(f -> f.rewritePath("/pricing-discount/(?<segment>.*)", "/${segment}"))
                         .uri("lb://pricing-discount-service"))
 
                 .build();
