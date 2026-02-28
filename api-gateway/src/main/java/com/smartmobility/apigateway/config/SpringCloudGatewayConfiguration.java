@@ -31,6 +31,11 @@ public class SpringCloudGatewayConfiguration {
                         // On retire "/pricing-discount" du chemin avant d'envoyer au microservice
                         .filters(f -> f.rewritePath("/pricing-discount/(?<segment>.*)", "/${segment}"))
                         .uri("lb://pricing-discount-service"))
+                .route(p->p
+                        .path("/billing/**")
+                        // On retire "/pricing-discount" du chemin avant d'envoyer au microservice
+                        .filters(f -> f.rewritePath("/billing/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://billing-service"))
 
                 .build();
     }

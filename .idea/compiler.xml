@@ -24,23 +24,15 @@
         </processorPath>
         <module name="trip-management-service" />
       </profile>
-      <profile name="Annotation profile for pricing-discount-service" enabled="true">
+      <profile name="Annotation profile for biling-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
-        <module name="pricing-discount-service" />
-      </profile>
-      <profile name="Annotation profile for biling-service" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
-        </processorPath>
         <module name="biling-service" />
+        <module name="pricing-discount-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

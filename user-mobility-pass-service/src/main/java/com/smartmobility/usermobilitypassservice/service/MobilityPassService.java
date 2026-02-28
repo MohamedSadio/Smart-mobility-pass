@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -232,4 +233,73 @@ public class MobilityPassService {
                 .map(mobilityPassMapper::toDto)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Débite le solde du MobilityPass.
+     * Vérifie que le pass est ACTIVE et que le solde est suffisant.
+     */
+    @Transactional
+    public MobilityPassDTO debitBalance(String passNumber, BigDecimal amount) {
+        log.info("Débit de {} FCFA sur le pass: {}", amount, passNumber);
+
+        ValidationUtils.validateNotEmpty(passNumber, "Numéro de pass");
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ValidationException("Le montant du débit doit être positif");
+        }
+
+        MobilityPass pass = mobilityPassRepository.findByPassNumber(passNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Mobility Pass non trouvé: " + passNumber));
+
+        if (pass.getStatus() != PassStatus.ACTIVE) {
+            throw new InvalidOperationException(
+                    "Impossible de débiter un pass non actif. Statut actuel: " + pass.getStatus());
+        }
+
+        if (pass.getBalance().compareTo(amount) < 0) {
+            throw new InvalidOperationException(
+                    "Solde insuffisant. Solde actuel: " + pass.getBalance() + " FCFA, montant demandé: " + amount + " FCFA");
+        }
+
+        pass.setBalance(pass.getBalance().subtract(amount));
+        pass.setLastUsedAt(LocalDateTime.now());
+        MobilityPass updatedPass = mobilityPassRepository.save(pass);
+
+        log.info("Débit effectué avec succès. Nouveau solde: {} FCFA", updatedPass.getBalance());
+        return mobilityPassMapper.toDto(updatedPass);
+    }
+
+    /**
+     * Recharge le solde du MobilityPass.
+     * Le pass doit être ACTIVE ou SUSPENDED (on peut recharger même un pass suspendu).
+     */
+    @Transactional
+    public MobilityPassDTO rechargeBalance(String passNumber, BigDecimal amount) {
+        log.info("Rechargement de {} FCFA sur le pass: {}", amount, passNumber);
+
+        ValidationUtils.validateNotEmpty(passNumber, "Numéro de pass");
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ValidationException("Le montant de rechargement doit être positif");
+        }
+
+        MobilityPass pass = mobilityPassRepository.findByPassNumber(passNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Mobility Pass non trouvé: " + passNumber));
+
+        if (pass.getStatus() == PassStatus.EXPIRED) {
+            throw new InvalidOperationException("Impossible de recharger un pass expiré");
+        }
+
+        pass.setBalance(pass.getBalance().add(amount));
+        MobilityPass updatedPass = mobilityPassRepository.save(pass);
+
+        log.info("Rechargement effectué avec succès. Nouveau solde: {} FCFA", updatedPass.getBalance());
+        return mobilityPassMapper.toDto(updatedPass);
+    }
+
+
+
+
+
+    
 }

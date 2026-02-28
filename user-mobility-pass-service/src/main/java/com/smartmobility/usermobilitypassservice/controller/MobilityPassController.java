@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -153,6 +154,32 @@ public class MobilityPassController {
             @RequestParam SubscriptionType subscriptionType) {
         log.info("REST - Mise à jour de l'abonnement du pass {} vers {}", passNumber, subscriptionType);
         MobilityPassDTO pass = mobilityPassService.updateSubscription(passNumber, subscriptionType);
+        return ResponseEntity.ok(pass);
+    }
+
+    /**
+     * Débiter le solde d'un MobilityPass
+     * POST /api/mobility-passes/{passNumber}/debit?amount=XXX
+     */
+    @PostMapping("/{passNumber}/debit")
+    public ResponseEntity<MobilityPassDTO> debitBalance(
+            @PathVariable String passNumber,
+            @RequestParam BigDecimal amount) {
+        log.info("REST - Débit de {} sur le pass: {}", amount, passNumber);
+        MobilityPassDTO pass = mobilityPassService.debitBalance(passNumber, amount);
+        return ResponseEntity.ok(pass);
+    }
+
+    /**
+     * Recharger le solde d'un MobilityPass
+     * POST /api/mobility-passes/{passNumber}/recharge?amount=XXX
+     */
+    @PostMapping("/{passNumber}/recharge")
+    public ResponseEntity<MobilityPassDTO> rechargeBalance(
+            @PathVariable String passNumber,
+            @RequestParam BigDecimal amount) {
+        log.info("REST - Rechargement de {} sur le pass: {}", amount, passNumber);
+        MobilityPassDTO pass = mobilityPassService.rechargeBalance(passNumber, amount);
         return ResponseEntity.ok(pass);
     }
 }
