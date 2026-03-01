@@ -21,7 +21,7 @@ public class BillingController {
 
     private final BillingService billingService;
 
-    @Retry(name = "default",fallbackMethod = "debit")
+    @Retry(name = "default",fallbackMethod = "debitFallback")
     @PostMapping("/debit")
     public ResponseEntity<BillingDto.TransactionResponse> debit(
             @Valid @RequestBody BillingDto.DebitRequest request) {
@@ -30,7 +30,7 @@ public class BillingController {
         return ResponseEntity.ok(billingService.debit(request));
     }
 
-    @Retry(name = "default",fallbackMethod = "recharge")
+    @Retry(name = "default",fallbackMethod = "rechargeFallback")
     @PostMapping("/recharge")
     public ResponseEntity<BillingDto.TransactionResponse> recharge(
             @Valid @RequestBody BillingDto.RechargeRequest request) {
@@ -39,7 +39,7 @@ public class BillingController {
         return ResponseEntity.ok(billingService.recharge(request));
     }
 
-    @Retry(name = "default",fallbackMethod = "default")
+    @Retry(name = "default")
     @GetMapping("/balance/{passNumber}")
     public ResponseEntity<BillingDto.BalanceResponse> getBalance(
             @PathVariable String passNumber) {
@@ -47,7 +47,7 @@ public class BillingController {
         return ResponseEntity.ok(billingService.getBalance(passNumber));
     }
 
-    @Retry(name = "default",fallbackMethod = "getBalanceByUser")
+    @Retry(name = "default")
     @GetMapping("/balance/user/{userId}")
     public ResponseEntity<BillingDto.BalanceResponse> getBalanceByUserId(
             @PathVariable UUID userId) {
