@@ -19,8 +19,7 @@ import java.util.UUID;
 public class NotificationController {
 
     private final NotificationService notificationService;
-
-    @Retry(name = "default",fallbackMethod = "defaultResponse")
+    
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<NotificationDto.NotificationResponse>> getAll(
             @PathVariable UUID userId) {
