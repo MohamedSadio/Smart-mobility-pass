@@ -1,4 +1,0 @@
-# Ajouts de Aziz — Import du serveur de config au démarrage (bootstrap) — 2026-02-21
-spring:
-  config:
-    import: "optional:configserver:http://config-server:8888"
