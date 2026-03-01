@@ -56,5 +56,7 @@ public class PricingDto {
         private String loyaltyTier;
         private String message;
         private LocalDateTime calculatedAt;
+        
+        private String executionChain;
     }
 }
