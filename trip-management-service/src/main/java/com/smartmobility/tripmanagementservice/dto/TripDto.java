@@ -36,6 +36,7 @@ public class TripDto {
             String        transportType,
             String        startStation,
             String        endStation,
+            Double        distanceKm,
             BigDecimal    baseFare,
             BigDecimal    discount,
             BigDecimal    finalFare,

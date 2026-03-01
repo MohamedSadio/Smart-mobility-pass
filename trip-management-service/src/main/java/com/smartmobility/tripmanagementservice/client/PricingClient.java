@@ -4,7 +4,9 @@ import com.smartmobility.tripmanagementservice.client.fallback.PricingClientFall
 import com.smartmobility.tripmanagementservice.dto.PricingResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.Map;
 
 @FeignClient(
         name = "pricing-discount-service",
@@ -13,9 +15,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface PricingClient {
 
     @PostMapping("/api/pricing/calculate")
-    PricingResponseDto calculate(
-            @RequestParam String transportType,
-            @RequestParam String passNumber,
-            @RequestParam Integer loyaltyPoints
-    );
+    PricingResponseDto calculate(@RequestBody Map<String, Object> request);
 }

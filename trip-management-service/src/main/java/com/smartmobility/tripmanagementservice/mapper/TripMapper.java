@@ -18,6 +18,7 @@ public class TripMapper {
                 trip.getTransportType().name(),
                 trip.getStartStation(),
                 trip.getEndStation(),
+                trip.getDistanceKm(),
                 trip.getBaseFare(),
                 trip.getDiscount(),
                 trip.getFinalFare(),

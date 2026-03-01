@@ -64,4 +64,8 @@ public class Trip {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    /** Distance du trajet en km (valeur par défaut selon le type de transport). */
+    @Column(name = "distance_km")
+    private Double distanceKm;
 }

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class MobilityPassClientFallback implements MobilityPassClient {
 
     @Override
-    public MobilityPassResponseDto getByPassNumber(String passNumber) {
+    public MobilityPassResponseDto getMobilityPassByPassNumber(String passNumber) {
         throw new ServiceUnavailableException(
                 "Le service utilisateur est indisponible. Impossible de vérifier le pass.");
     }

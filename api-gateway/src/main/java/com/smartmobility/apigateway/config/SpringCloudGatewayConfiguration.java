@@ -33,6 +33,14 @@ public class SpringCloudGatewayConfiguration {
                         .path("/billing/**")
                         .filters(f -> f.rewritePath("/billing/(?<segment>.*)", "/${segment}"))
                         .uri("lb://billing-service"))
+                .route(p->p
+                        .path("/notification/**")
+                        .filters(f -> f.rewritePath("/notification/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://notification-service"))
+                .route(p->p
+                        .path("/trip-management/**")
+                        .filters(f -> f.rewritePath("/trip-management/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://trip-management-service"))
 
                 .build();
     }

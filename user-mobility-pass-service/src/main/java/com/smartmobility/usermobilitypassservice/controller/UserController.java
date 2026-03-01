@@ -5,6 +5,7 @@ import com.smartmobility.usermobilitypassservice.dto.UpdateUserRequest;
 import com.smartmobility.usermobilitypassservice.dto.UserDTO;
 import com.smartmobility.usermobilitypassservice.entity.UserStatus;
 import com.smartmobility.usermobilitypassservice.service.UserService;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,6 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-
     /**
      * Créer un nouvel utilisateur
      * POST /api/users
@@ -37,8 +37,10 @@ public class UserController {
      * Récupérer un utilisateur par ID
      * GET /api/users/{id}
      */
+    @Retry(name = "default",fallbackMethod = "defaultResponse")
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable UUID id) {
+        
         log.info("REST - Récupération de l'utilisateur: {}", id);
         UserDTO user = userService.getUserById(id);
         return ResponseEntity.ok(user);
@@ -48,6 +50,7 @@ public class UserController {
      * Récupérer un utilisateur par email
      * GET /api/users/email/{email}
      */
+    @Retry(name = "default",fallbackMethod = "defaultResponse")
     @GetMapping("/email/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
         log.info("REST - Récupération de l'utilisateur par email: {}", email);
@@ -59,6 +62,7 @@ public class UserController {
      * Récupérer un utilisateur par numéro de téléphone
      * GET /api/users/phone/{phoneNumber}
      */
+    @Retry(name = "default",fallbackMethod = "defaultResponse")
     @GetMapping("/phone/{phoneNumber}")
     public ResponseEntity<UserDTO> getUserByPhoneNumber(@PathVariable String phoneNumber) {
         log.info("REST - Récupération de l'utilisateur par téléphone: {}", phoneNumber);
@@ -81,6 +85,7 @@ public class UserController {
      * Récupérer les utilisateurs par statut
      * GET /api/users/status/{status}
      */
+    @Retry(name = "default",fallbackMethod = "defaultResponse")
     @GetMapping("/status/{status}")
     public ResponseEntity<List<UserDTO>> getUsersByStatus(@PathVariable UserStatus status) {
         log.info("REST - Récupération des utilisateurs avec le statut: {}", status);
@@ -92,6 +97,7 @@ public class UserController {
      * Rechercher des utilisateurs
      * GET /api/users/search?term=xxx
      */
+    @Retry(name = "default",fallbackMethod = "defaultResponse")
     @GetMapping("/search")
     public ResponseEntity<List<UserDTO>> searchUsers(@RequestParam String term) {
         log.info("REST - Recherche d'utilisateurs avec le terme: {}", term);

@@ -2,6 +2,7 @@ package com.projet.smartmobility.bilingservice.controller;
 
 import com.projet.smartmobility.bilingservice.dto.BillingDto;
 import com.projet.smartmobility.bilingservice.service.BillingService;
+import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,7 @@ public class BillingController {
 
     private final BillingService billingService;
 
-    
+    @Retry(name = "default",fallbackMethod = "debit")
     @PostMapping("/debit")
     public ResponseEntity<BillingDto.TransactionResponse> debit(
             @Valid @RequestBody BillingDto.DebitRequest request) {
@@ -29,7 +30,7 @@ public class BillingController {
         return ResponseEntity.ok(billingService.debit(request));
     }
 
-   
+    @Retry(name = "default",fallbackMethod = "recharge")
     @PostMapping("/recharge")
     public ResponseEntity<BillingDto.TransactionResponse> recharge(
             @Valid @RequestBody BillingDto.RechargeRequest request) {
@@ -38,7 +39,7 @@ public class BillingController {
         return ResponseEntity.ok(billingService.recharge(request));
     }
 
-   
+    @Retry(name = "default",fallbackMethod = "default")
     @GetMapping("/balance/{passNumber}")
     public ResponseEntity<BillingDto.BalanceResponse> getBalance(
             @PathVariable String passNumber) {
@@ -46,7 +47,8 @@ public class BillingController {
         return ResponseEntity.ok(billingService.getBalance(passNumber));
     }
 
-       @GetMapping("/balance/user/{userId}")
+    @Retry(name = "default",fallbackMethod = "getBalanceByUser")
+    @GetMapping("/balance/user/{userId}")
     public ResponseEntity<BillingDto.BalanceResponse> getBalanceByUserId(
             @PathVariable UUID userId) {
         log.info("[CONTROLLER] GET /api/billing/balance/user/{}", userId);

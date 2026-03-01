@@ -4,7 +4,9 @@ import com.smartmobility.tripmanagementservice.client.fallback.BillingClientFall
 import com.smartmobility.tripmanagementservice.dto.BillingResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.Map;
 
 @FeignClient(
         name = "billing-service",
@@ -13,8 +15,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface BillingClient {
 
     @PostMapping("/api/billing/debit")
-    BillingResponseDto debit(
-            @RequestParam String passNumber,
-            @RequestParam java.math.BigDecimal amount
-    );
+    BillingResponseDto debit(@RequestBody Map<String, Object> request);
 }

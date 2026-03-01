@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -37,7 +38,7 @@ public class TripService {
         log.info("[TRIP] Nouveau trajet — pass={}, transport={}", request.passNumber(), request.transportType());
 
         // ── Étape 1 : Vérifier le pass via UserService ───────────────────────
-        MobilityPassResponseDto pass = mobilityPassClient.getByPassNumber(request.passNumber());
+        MobilityPassResponseDto pass = mobilityPassClient.getMobilityPassByPassNumber(request.passNumber());
 
         if (!"ACTIVE".equals(pass.status())) {
             log.warn("[TRIP] Pass inactif — pass={}, status={}", request.passNumber(), pass.status());
@@ -52,13 +53,19 @@ public class TripService {
         }
 
         // ── Étape 2 : Calculer le tarif via PricingService ───────────────────
-        PricingResponseDto pricing = pricingClient.calculate(
-                request.transportType(),
-                request.passNumber(),
-                pass.loyaltyPoints()
-        );
+        double distanceKm = getDefaultDistance(request.transportType());
+
+        PricingResponseDto pricing = pricingClient.calculate(Map.of(
+                "userId",           pass.userId(),
+                "passNumber",       request.passNumber(),
+                "transportType",    request.transportType(),
+                "loyaltyPoints",    pass.loyaltyPoints(),
+                "tripTime",         java.time.LocalDateTime.now().toString(),
+                "distanceKm",       distanceKm,
+                "dailySpentAmount", java.math.BigDecimal.ZERO
+        ));
         log.info("[TRIP] Tarif calculé — base={}, remise={}, final={}",
-                pricing.baseFare(), pricing.discount(), pricing.finalFare());
+                pricing.baseFare(), pricing.totalDiscount(), pricing.finalFare());
 
         // ── Étape 3 : Vérifier le solde ──────────────────────────────────────
         if (pass.balance().compareTo(pricing.finalFare()) < 0) {
@@ -75,7 +82,10 @@ public class TripService {
         }
 
         // ── Étape 4 : Débiter via BillingService ─────────────────────────────
-        BillingResponseDto billing = billingClient.debit(request.passNumber(), pricing.finalFare());
+        BillingResponseDto billing = billingClient.debit(Map.of(
+                "passNumber", request.passNumber(),
+                "amount",     pricing.finalFare()
+        ));
         log.info("[TRIP] Débit effectué — txId={}, nouveau solde={}", billing.transactionId(), billing.newBalance());
 
         // ── Étape 5 : Enregistrer le trajet ──────────────────────────────────
@@ -86,9 +96,10 @@ public class TripService {
         trip.setStartStation(request.startStation());
         trip.setEndStation(request.endStation());
         trip.setBaseFare(pricing.baseFare());
-        trip.setDiscount(pricing.discount());
+        trip.setDiscount(pricing.totalDiscount());
         trip.setFinalFare(pricing.finalFare());
         trip.setStatus(TripStatus.COMPLETED);
+        trip.setDistanceKm(distanceKm);
         tripRepository.save(trip);
         log.info("[TRIP] Trajet enregistré — id={}", trip.getId());
 
@@ -135,5 +146,13 @@ public class TripService {
         } catch (Exception e) {
             log.warn("[TRIP] Échec publication RabbitMQ — tripId={} : {}", trip.getId(), e.getMessage());
         }
+    }
+
+    private double getDefaultDistance(String transportType) {
+        return switch (transportType.toUpperCase()) {
+            case "BRT" -> 10.0;
+            case "TER" -> 50.0;
+            default    ->  5.0; // BUS
+        };
     }
 }

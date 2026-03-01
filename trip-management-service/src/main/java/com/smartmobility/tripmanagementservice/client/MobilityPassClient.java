@@ -12,6 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 )
 public interface MobilityPassClient {
 
-    @GetMapping("/api/mobility-passes/{passNumber}")
-    MobilityPassResponseDto getByPassNumber(@PathVariable String passNumber);
+    @GetMapping("/api/mobility-passes/number/{passNumber}")
+    MobilityPassResponseDto getMobilityPassByPassNumber(@PathVariable String passNumber);
 }

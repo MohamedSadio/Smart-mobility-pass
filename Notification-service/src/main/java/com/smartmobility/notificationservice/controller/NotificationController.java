@@ -2,6 +2,7 @@ package com.smartmobility.notificationservice.controller;
 
 import com.smartmobility.notificationservice.dto.NotificationDto;
 import com.smartmobility.notificationservice.service.NotificationService;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
+    @Retry(name = "default",fallbackMethod = "defaultResponse")
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<NotificationDto.NotificationResponse>> getAll(
             @PathVariable UUID userId) {
