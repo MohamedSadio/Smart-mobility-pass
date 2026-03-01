@@ -32,7 +32,7 @@ public class BillingService {
         var updatedPass = mobilityPassClient.debit(request.passNumber(), request.amount());
         Transaction tx = transactionRepository.save(
                 transactionMapper.toEntity(updatedPass, request.amount(), TransactionType.DEBIT));
-        //publishEvent(tx);
+        publishEvent(tx);
         return transactionMapper.toDto(tx);
     }
 
@@ -42,7 +42,7 @@ public class BillingService {
         var updatedPass = mobilityPassClient.recharge(request.passNumber(), request.amount());
         Transaction tx = transactionRepository.save(
                 transactionMapper.toEntity(updatedPass, request.amount(), TransactionType.RECHARGE));
-        //publishEvent(tx);
+        publishEvent(tx);
         return transactionMapper.toDto(tx);
     }
 
@@ -68,15 +68,15 @@ public class BillingService {
 
     // -------------------------------------------------------------------------
 
-//    private void publishEvent(Transaction tx) {
-//        try {
-//            rabbitTemplate.convertAndSend(
-//                    RabbitMQConfig.EXCHANGE_NAME,
-//                    RabbitMQConfig.ROUTING_KEY_TX,
-//                    transactionMapper.toEvent(tx));
-//            log.info("[BILLING] TransactionEvent publié — txId={}", tx.getId());
-//        } catch (Exception e) {
-//            log.warn("[BILLING] Échec publication RabbitMQ — txId={} : {}", tx.getId(), e.getMessage());
-//        }
-//    }
+    private void publishEvent(Transaction tx) {
+        try {
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE_NAME,
+                    RabbitMQConfig.ROUTING_KEY_TX,
+                    transactionMapper.toEvent(tx));
+            log.info("[BILLING] TransactionEvent publié — txId={}", tx.getId());
+        } catch (Exception e) {
+            log.warn("[BILLING] Échec publication RabbitMQ — txId={} : {}", tx.getId(), e.getMessage());
+        }
+    }
 }
