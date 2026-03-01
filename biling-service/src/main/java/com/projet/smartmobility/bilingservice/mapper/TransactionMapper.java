@@ -60,13 +60,17 @@ public class TransactionMapper {
      */
     public TransactionEvent toEvent(Transaction tx) {
         return new TransactionEvent(
-                tx.getId(),
-                tx.getPassNumber(),
+                tx.getId(),           // sourceId
+                "BILLING",            // sourceService
                 tx.getUserId(),
+                tx.getPassNumber(),
+                tx.getType().name(),  // String au lieu de l'enum
                 tx.getAmount(),
                 tx.getBalanceAfter(),
-                tx.getType(),
-                tx.getPassStatus(),
+                tx.getPassStatus().name(), // String au lieu de l'enum
+                null,                 // transportType
+                null,                 // startStation
+                null,                 // endStation
                 LocalDateTime.now()
         );
     }

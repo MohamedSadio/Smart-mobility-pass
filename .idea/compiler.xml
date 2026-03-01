@@ -24,7 +24,7 @@
         </processorPath>
         <module name="trip-management-service" />
       </profile>
-      <profile name="Annotation profile for Notification-service" enabled="true">
+      <profile name="Annotation profile for pricing-discount-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -32,8 +32,8 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
         <module name="Notification-service" />
-        <module name="biling-service" />
         <module name="pricing-discount-service" />
+        <module name="biling-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
