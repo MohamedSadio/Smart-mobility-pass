@@ -24,13 +24,14 @@
         </processorPath>
         <module name="trip-management-service" />
       </profile>
-      <profile name="Annotation profile for biling-service" enabled="true">
+      <profile name="Annotation profile for Notification-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
+        <module name="Notification-service" />
         <module name="biling-service" />
         <module name="pricing-discount-service" />
       </profile>
@@ -41,6 +42,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="Notification-service" options="-parameters" />
       <module name="api-gateway" options="-parameters" />
       <module name="biling-service" options="-parameters" />
       <module name="billing-service" options="-parameters" />
