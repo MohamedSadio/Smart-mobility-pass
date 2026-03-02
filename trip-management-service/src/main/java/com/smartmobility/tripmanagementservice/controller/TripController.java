@@ -20,11 +20,11 @@ public class TripController {
 
     private final TripService tripService;
 
-    /** POST /api/trips — enregistrer un trajet */
-    @PostMapping
-    public ResponseEntity<TripDto.TripResponse> registerTrip(
+    /** POST /api/trips/process — enregistrer un trajet */
+    @PostMapping("/process")
+    public ResponseEntity<TripDto.TripResponse> processTrip(
             @Valid @RequestBody TripDto.TripRequest request) {
-        log.info("[CONTROLLER] POST /api/trips — pass={}", request.passNumber());
+        log.info("[CONTROLLER] POST /api/trips/process — userId={}", request.userId());
         return ResponseEntity.status(HttpStatus.CREATED).body(tripService.registerTrip(request));
     }
 

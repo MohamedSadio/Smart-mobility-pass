@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TripException.class)
     public ProblemDetail handleTripRejected(TripException ex) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(422), ex.getMessage());
         pd.setTitle("Trajet rejeté");
         pd.setType(URI.create("trip-service/trip-rejected"));
         pd.setProperty("reason", ex.getReason());

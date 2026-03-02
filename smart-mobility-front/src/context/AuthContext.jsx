@@ -26,42 +26,30 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            // --- TEMPORARY MOCK LOGIN ---
-            if (email === 'admin@test.com' && password === 'password') {
-                const mockToken = "mock_jwt_token_12345";
-                const mockUser = {
-                    id: "uuid-1234-5678",
-                    firstName: "Admin",
-                    lastName: "Test",
-                    email: "admin@test.com",
-                    role: "ADMIN"
-                };
+            // Check if user exists using the User service (via Gateway)
+            const response = await api.get(`/user-mobility-pass/api/users/email/${email}`);
+            const userData = response.data;
+
+            if (userData && userData.id) {
+                // Since there is no backend authentication mechanism, we mock the token locally 
+                // but use the REAL user data from the database.
+                const mockToken = `mock_token_${userData.id}_${Date.now()}`;
 
                 setToken(mockToken);
-                setUser(mockUser);
+                setUser(userData);
                 localStorage.setItem('smp_token', mockToken);
-                localStorage.setItem('smp_user', JSON.stringify(mockUser));
+                localStorage.setItem('smp_user', JSON.stringify(userData));
 
                 return { success: true };
+            } else {
+                return { success: false, error: 'Utilisateur introuvable avec cette adresse email.' };
             }
-            // --- END MOCK LOGIN ---
-            // Simulated response depending on API Gateway capabilities
-            // Once your gateway/auth service is fully implemented, this endpoint should return a JWT
-            const response = await api.post('/api/auth/login', { email, password });
-
-            const { token, user: userData } = response.data;
-
-            setToken(token);
-            setUser(userData);
-
-            localStorage.setItem('smp_token', token);
-            localStorage.setItem('smp_user', JSON.stringify(userData));
-
-            return { success: true };
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.message || 'Login failed'
+                error: error.response?.status === 404
+                    ? "Aucun compte trouvé pour cet email. Veuillez vous inscrire."
+                    : error.response?.data?.message || 'Erreur de connexion. Vérifiez le réseau ou les services backend.'
             };
         }
     };
@@ -69,12 +57,12 @@ export const AuthProvider = ({ children }) => {
     const register = async (userData) => {
         try {
             // Send data to user-mobility-pass-service through Gateway
-            const response = await api.post('/api/users', userData);
+            const response = await api.post('/user-mobility-pass/api/users', userData);
             return { success: true, data: response.data };
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.message || 'Registration failed'
+                error: error.response?.data?.message || "L'inscription a échoué. Vérifiez vos informations."
             };
         }
     };

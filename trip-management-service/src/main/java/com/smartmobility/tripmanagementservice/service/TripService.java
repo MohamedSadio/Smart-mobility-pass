@@ -20,81 +20,73 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.math.BigDecimal;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class TripService {
 
-    private final TripRepository      tripRepository;
-    private final MobilityPassClient  mobilityPassClient;
-    private final PricingClient       pricingClient;
-    private final BillingClient       billingClient;
-    private final TripMapper          tripMapper;
-    private final RabbitTemplate      rabbitTemplate;
+    private final TripRepository tripRepository;
+    private final MobilityPassClient mobilityPassClient;
+    private final PricingClient pricingClient;
+    private final BillingClient billingClient;
+    private final TripMapper tripMapper;
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional
     public TripDto.TripResponse registerTrip(TripDto.TripRequest request) {
-        log.info("[TRIP] Nouveau trajet — pass={}, transport={}", request.passNumber(), request.transportType());
+        log.info("[TRIP] Nouveau trajet — userId={}, transport={}", request.userId(), request.transportType());
 
         // ── Étape 1 : Vérifier le pass via UserService ───────────────────────
-        MobilityPassResponseDto pass = mobilityPassClient.getMobilityPassByPassNumber(request.passNumber());
+        MobilityPassResponseDto pass = mobilityPassClient.getMobilityPassByUserId(request.userId());
 
         if (!"ACTIVE".equals(pass.status())) {
-            log.warn("[TRIP] Pass inactif — pass={}, status={}", request.passNumber(), pass.status());
-            Trip failed = buildFailedTrip(request, pass.userId(), "PASS_INACTIVE",
+            log.warn("[TRIP] Pass inactif — userId={}, status={}", request.userId(), pass.status());
+            Trip failed = buildFailedTrip(request, pass.userId(), pass.passNumber(), "PASS_INACTIVE",
                     "Pass inactif ou suspendu. Statut actuel : " + pass.status());
             tripRepository.save(failed);
             publishEvent(failed, "PASS_INACTIVE", pass.status());
             throw new TripException(
                     "Trajet refusé : votre pass est inactif.",
-                    "PASS_INACTIVE"
-            );
+                    "PASS_INACTIVE");
         }
 
         // ── Étape 2 : Calculer le tarif via PricingService ───────────────────
-        double distanceKm = getDefaultDistance(request.transportType());
+        double distanceKm = request.distanceKm() != null ? request.distanceKm()
+                : getDefaultDistance(request.transportType());
 
-        PricingResponseDto pricing = pricingClient.calculate(Map.of(
-                "userId",           pass.userId(),
-                "passNumber",       request.passNumber(),
-                "transportType",    request.transportType(),
-                "loyaltyPoints",    pass.loyaltyPoints(),
-                "tripTime",         java.time.LocalDateTime.now().toString(),
-                "distanceKm",       distanceKm,
-                "dailySpentAmount", java.math.BigDecimal.ZERO
-        ));
+        PricingResponseDto pricing = fetchPricing(pass, request, distanceKm);
         log.info("[TRIP] Tarif calculé — base={}, remise={}, final={}",
                 pricing.baseFare(), pricing.totalDiscount(), pricing.finalFare());
 
         // ── Étape 3 : Vérifier le solde ──────────────────────────────────────
         if (pass.balance().compareTo(pricing.finalFare()) < 0) {
             log.warn("[TRIP] Solde insuffisant — solde={}, requis={}", pass.balance(), pricing.finalFare());
-            Trip failed = buildFailedTrip(request, pass.userId(), "INSUFFICIENT_BALANCE",
+            Trip failed = buildFailedTrip(request, pass.userId(), pass.passNumber(), "INSUFFICIENT_BALANCE",
                     String.format("Solde insuffisant. Solde : %.0f FCFA, Requis : %.0f FCFA",
                             pass.balance(), pricing.finalFare()));
             tripRepository.save(failed);
             publishEvent(failed, "INSUFFICIENT_BALANCE", pass.status());
             throw new TripException(
                     "Trajet refusé : solde insuffisant.",
-                    "INSUFFICIENT_BALANCE"
-            );
+                    "INSUFFICIENT_BALANCE");
         }
 
         // ── Étape 4 : Débiter via BillingService ─────────────────────────────
         BillingResponseDto billing = billingClient.debit(Map.of(
-                "passNumber", request.passNumber(),
-                "amount",     pricing.finalFare()
-        ));
+                "passNumber", pass.passNumber(),
+                "amount", pricing.finalFare()));
         log.info("[TRIP] Débit effectué — txId={}, nouveau solde={}", billing.transactionId(), billing.newBalance());
 
         // ── Étape 5 : Enregistrer le trajet ──────────────────────────────────
         Trip trip = new Trip();
-        trip.setPassNumber(request.passNumber());
+        trip.setPassNumber(pass.passNumber());
         trip.setUserId(pass.userId());
         trip.setTransportType(TransportType.valueOf(request.transportType()));
-        trip.setStartStation(request.startStation());
-        trip.setEndStation(request.endStation());
+        trip.setStartStation("Station A");
+        trip.setEndStation("Station B");
         trip.setBaseFare(pricing.baseFare());
         trip.setDiscount(pricing.totalDiscount());
         trip.setFinalFare(pricing.finalFare());
@@ -123,14 +115,14 @@ public class TripService {
 
     // ── Méthodes privées ─────────────────────────────────────────────────────
 
-    private Trip buildFailedTrip(TripDto.TripRequest request, UUID userId,
-                                 String reason, String failureReason) {
+    private Trip buildFailedTrip(TripDto.TripRequest request, UUID userId, String passNumber,
+            String reason, String failureReason) {
         Trip trip = new Trip();
-        trip.setPassNumber(request.passNumber());
+        trip.setPassNumber(passNumber);
         trip.setUserId(userId);
         trip.setTransportType(TransportType.valueOf(request.transportType()));
-        trip.setStartStation(request.startStation());
-        trip.setEndStation(request.endStation());
+        trip.setStartStation("Station A");
+        trip.setEndStation("Station B");
         trip.setStatus(TripStatus.FAILED);
         trip.setFailureReason(failureReason);
         return trip;
@@ -152,7 +144,45 @@ public class TripService {
         return switch (transportType.toUpperCase()) {
             case "BRT" -> 10.0;
             case "TER" -> 50.0;
-            default    ->  5.0; // BUS
+            default -> 5.0; // BUS
         };
+    }
+
+    @CircuitBreaker(name = "pricingService", fallbackMethod = "pricingFallback")
+    public PricingResponseDto fetchPricing(MobilityPassResponseDto pass, TripDto.TripRequest request,
+            double distanceKm) {
+        return pricingClient.calculate(Map.of(
+                "userId", pass.userId(),
+                "passNumber", pass.passNumber(),
+                "transportType", request.transportType(),
+                "loyaltyPoints", pass.loyaltyPoints(),
+                "tripTime", java.time.LocalDateTime.now().toString(),
+                "distanceKm", distanceKm,
+                "dailySpentAmount", BigDecimal.ZERO));
+    }
+
+    public PricingResponseDto pricingFallback(MobilityPassResponseDto pass, TripDto.TripRequest request,
+            double distanceKm, Throwable t) {
+        log.error("[TRIP] PricingService indisponible (Fallback activé) : {}", t.getMessage());
+        // Logique de secours demandée : permettre de poursuivre avec un tarif par
+        // défaut
+        BigDecimal defaultBase = BigDecimal.valueOf(distanceKm * 200.0); // 200 FCFA/km par défaut
+        return new PricingResponseDto(
+                pass.userId(),
+                request.transportType(),
+                distanceKm,
+                defaultBase, // baseFare
+                BigDecimal.ZERO, // distanceFare
+                defaultBase, // totalBeforeDiscount
+                BigDecimal.ZERO, // offPeakDiscount
+                BigDecimal.ZERO, // loyaltyDiscount
+                BigDecimal.ZERO, // subscriptionDiscount
+                BigDecimal.ZERO, // totalDiscount
+                defaultBase, // finalFare
+                false, // dailyCapReached
+                "UNKNOWN", // loyaltyTier
+                "Fallback price", // message
+                java.time.LocalDateTime.now() // calculatedAt
+        );
     }
 }

@@ -13,4 +13,10 @@ public class MobilityPassClientFallback implements MobilityPassClient {
         throw new ServiceUnavailableException(
                 "Le service utilisateur est indisponible. Impossible de vérifier le pass.");
     }
+
+    @Override
+    public MobilityPassResponseDto getMobilityPassByUserId(java.util.UUID userId) {
+        throw new ServiceUnavailableException(
+                "Le service utilisateur est indisponible. Impossible de vérifier le pass.");
+    }
 }

@@ -1,93 +1,144 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Mail, Lock, User, ArrowRight, Activity, Phone } from 'lucide-react';
 
 const LoginPage = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [isLogin, setIsLogin] = useState(true);
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        phoneNumber: '',
+        role: 'USER'
+    });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const { login } = useAuth();
+    const { login, register } = useAuth();
     const navigate = useNavigate();
+
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setIsLoading(true);
 
-        const result = await login(email, password);
-
-        if (result.success) {
-            navigate('/');
+        if (isLogin) {
+            const result = await login(formData.email, formData.password);
+            if (result.success) navigate('/');
+            else setError(result.error);
         } else {
-            setError(result.error);
+            const result = await register(formData);
+            if (result.success) {
+                // Auto-login after register
+                const loginResult = await login(formData.email, formData.password);
+                if (loginResult.success) navigate('/');
+                else {
+                    setIsLogin(true);
+                    setError('Inscription réussie. Veuillez vous connecter.');
+                }
+            } else {
+                setError(result.error);
+            }
         }
-
         setIsLoading(false);
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-indigo-600">
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden px-4 sm:px-6 lg:px-8">
+            {/* Background Decorations */}
+            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse-slow"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse-slow object-right"></div>
+
+            <div className="max-w-md w-full space-y-8 bg-white/80 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-white/50 relative z-10 animate-fade-in">
+                <div className="text-center">
+                    <div className="mx-auto bg-indigo-600 text-white w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transform transition hover:scale-105">
+                        <Activity className="w-8 h-8" />
+                    </div>
+                    <h2 className="mt-6 text-3xl font-extrabold text-slate-800 tracking-tight">
                         Smart Mobility Pass
                     </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Connectez-vous pour gérer vos trajets
+                    <p className="mt-2 text-sm text-slate-500">
+                        {isLogin ? 'Connectez-vous pour gérer vos trajets' : 'Créez votre compte pour commencer'}
                     </p>
-                    <div className="mt-4 p-3 bg-blue-50 text-blue-800 text-xs rounded-lg text-center border border-blue-200">
-                        <p className="font-semibold">Test d'Interface (Mock)</p>
-                        <p>Email : <span className="font-mono bg-blue-100 px-1 rounded">admin@test.com</span></p>
-                        <p>Mot de passe : <span className="font-mono bg-blue-100 px-1 rounded">password</span></p>
-                    </div>
-
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                <form className="mt-8 space-y-6 animate-slide-up" onSubmit={handleSubmit}>
                     {error && (
-                        <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm text-center">
+                        <div className="bg-red-50/80 backdrop-blur-sm border border-red-200 text-red-600 p-4 rounded-xl text-sm text-center shadow-sm animate-fade-in">
                             {error}
                         </div>
                     )}
 
-                    <div className="rounded-md shadow-sm space-y-4">
+                    <div className="space-y-4">
+                        {!isLogin && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="sr-only">Prénom</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <User className="h-5 w-5 text-slate-400" />
+                                        </div>
+                                        <input name="firstName" type="text" required onChange={handleChange} className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 backdrop-blur-sm transition-all text-sm outline-none" placeholder="Prénom" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="sr-only">Nom</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <User className="h-5 w-5 text-slate-400" />
+                                        </div>
+                                        <input name="lastName" type="text" required onChange={handleChange} className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 backdrop-blur-sm transition-all text-sm outline-none" placeholder="Nom" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {!isLogin && (
+                            <div>
+                                <label className="sr-only">Numéro de téléphone</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Phone className="h-5 w-5 text-slate-400" />
+                                    </div>
+                                    <input name="phoneNumber" type="tel" required onChange={handleChange} className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 backdrop-blur-sm transition-all text-sm outline-none" placeholder="Numéro de téléphone" />
+                                </div>
+                            </div>
+                        )}
                         <div>
-                            <label htmlFor="email-address" className="sr-only">Email address</label>
-                            <input
-                                id="email-address"
-                                name="email"
-                                type="email"
-                                required
-                                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors"
-                                placeholder="Adresse email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
+                            <label className="sr-only">Email address</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Mail className="h-5 w-5 text-slate-400" />
+                                </div>
+                                <input name="email" type="email" required onChange={handleChange} className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 backdrop-blur-sm transition-all text-sm outline-none" placeholder="Adresse email" />
+                            </div>
                         </div>
                         <div>
-                            <label htmlFor="password" className="sr-only">Password</label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                required
-                                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors"
-                                placeholder="Mot de passe"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
+                            <label className="sr-only">Password</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-slate-400" />
+                                </div>
+                                <input name="password" type="password" required onChange={handleChange} className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 backdrop-blur-sm transition-all text-sm outline-none" placeholder="Mot de passe" />
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                        >
-                            {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className={`group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-md shadow-indigo-600/30 transition-all ${isLoading ? 'opacity-70 cursor-wait' : 'hover:-translate-y-0.5'}`}
+                    >
+                        {isLoading ? 'Patientez...' : (isLogin ? 'Se connecter' : "S'inscrire")}
+                        {!isLoading && <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />}
+                    </button>
+
+                    <div className="text-center mt-4">
+                        <button type="button" onClick={() => { setIsLogin(!isLogin); setError(''); }} className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
+                            {isLogin ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
                         </button>
                     </div>
                 </form>
