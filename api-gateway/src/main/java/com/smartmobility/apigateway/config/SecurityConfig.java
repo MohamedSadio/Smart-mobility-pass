@@ -27,8 +27,8 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
 
                         // ── Routes publiques ──────────────────────────────
-                        .pathMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/auth/api/auth/register").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/auth/api/auth/login").permitAll()
 
                         // ── Routes ADMIN uniquement ───────────────────────
                         .pathMatchers(HttpMethod.GET, "/user-mobility-pass/api/admin/**").hasRole("ADMIN")

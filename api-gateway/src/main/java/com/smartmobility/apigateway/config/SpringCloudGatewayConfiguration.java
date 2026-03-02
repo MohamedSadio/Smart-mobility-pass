@@ -43,7 +43,7 @@ public class SpringCloudGatewayConfiguration {
                         .uri("lb://trip-management-service"))
                 .route(p -> p
                         .path("/auth/**")
-                        .filters(f -> f.rewritePath("/auth/(?<segment>.*)", "/api/auth/${segment}"))
+                        .filters(f -> f.rewritePath("/auth/(?<segment>.*)", "/${segment}"))
                         .uri("lb://auth-service"))
 
                 .build();
