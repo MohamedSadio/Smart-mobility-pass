@@ -51,6 +51,12 @@ public class AuthService {
             throw new AuthException("Email ou mot de passe incorrect.");
         }
 
+        // Log temporaire pour débugger
+        log.info("[AUTH] Password hashé en base : {}", user.password());
+        log.info("[AUTH] Password saisi : {}", request.password());
+        log.info("[AUTH] Matches : {}", passwordEncoder.matches(request.password(), user.password()));
+
+
         // Vérification BCrypt : mot de passe saisi vs mot de passe hashé en base
         if (!passwordEncoder.matches(request.password(), user.password())) {
             log.warn("[AUTH] Mot de passe incorrect — email={}", request.email());

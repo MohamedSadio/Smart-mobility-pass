@@ -29,6 +29,7 @@ public class UserMapper {
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setPassword(user.getPassword());
         dto.setRole(user.getRole());
         dto.setStatus(user.getStatus());
         dto.setCreatedAt(user.getCreatedAt());
