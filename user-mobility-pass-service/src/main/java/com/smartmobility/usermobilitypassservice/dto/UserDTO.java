@@ -1,5 +1,6 @@
 package com.smartmobility.usermobilitypassservice.dto;
 
+import com.smartmobility.usermobilitypassservice.entity.Role;
 import com.smartmobility.usermobilitypassservice.entity.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class UserDTO {
     private String email;
     private String phoneNumber;
     private String password;
+    private Role role;
     private UserStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

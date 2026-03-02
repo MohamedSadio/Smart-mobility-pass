@@ -1,5 +1,6 @@
 package com.smartmobility.usermobilitypassservice.dto;
 
+import com.smartmobility.usermobilitypassservice.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,5 +14,6 @@ public class CreateUserRequest {
     private String lastName;
     private String email;
     private String phoneNumber;
+    private Role role;
     private String password;
 }

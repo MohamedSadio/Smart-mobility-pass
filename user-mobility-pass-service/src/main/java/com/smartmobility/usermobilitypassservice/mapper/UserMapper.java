@@ -29,6 +29,7 @@ public class UserMapper {
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setRole(user.getRole());
         dto.setStatus(user.getStatus());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
@@ -58,6 +59,7 @@ public class UserMapper {
         user.setEmail(dto.getEmail());
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setPassword(dto.getPassword());
+        user.setRole(dto.getRole());
         user.setStatus(dto.getStatus() != null ? dto.getStatus() : UserStatus.ACTIVE);
 
         return user;
@@ -77,6 +79,7 @@ public class UserMapper {
         user.setEmail(request.getEmail());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPassword(request.getPassword()); // TODO: Encoder avec BCrypt
+        user.setRole(request.getRole());
         user.setStatus(UserStatus.ACTIVE);
 
         return user;
@@ -97,6 +100,7 @@ public class UserMapper {
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setRole(user.getRole());
         dto.setStatus(user.getStatus());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
@@ -123,6 +127,9 @@ public class UserMapper {
         }
         if (dto.getPhoneNumber() != null) {
             user.setPhoneNumber(dto.getPhoneNumber());
+        }
+        if(dto.getRole() != null) {
+            user.setRole(dto.getRole());
         }
         if (dto.getStatus() != null) {
             user.setStatus(dto.getStatus());

@@ -3,6 +3,7 @@ package com.smartmobility.usermobilitypassservice.service;
 import com.smartmobility.usermobilitypassservice.dto.CreateUserRequest;
 import com.smartmobility.usermobilitypassservice.dto.UpdateUserRequest;
 import com.smartmobility.usermobilitypassservice.dto.UserDTO;
+import com.smartmobility.usermobilitypassservice.entity.Role;
 import com.smartmobility.usermobilitypassservice.entity.User;
 import com.smartmobility.usermobilitypassservice.entity.UserStatus;
 import com.smartmobility.usermobilitypassservice.exception.DuplicateResourceException;
@@ -13,6 +14,7 @@ import com.smartmobility.usermobilitypassservice.repository.UserRepository;
 import com.smartmobility.usermobilitypassservice.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,15 +30,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final MobilityPassService mobilityPassService;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserDTO createUser(CreateUserRequest request) {
         log.info("Création d'un nouvel utilisateur: {}", request.getEmail());
 
-        // Validation des données
         validateUserRequest(request);
 
-        // Vérification des doublons
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException("Un utilisateur avec cet email existe déjà");
         }
@@ -45,17 +46,21 @@ public class UserService {
             throw new DuplicateResourceException("Un utilisateur avec ce numéro de téléphone existe déjà");
         }
 
-        // Conversion et sauvegarde
         User user = userMapper.toEntity(request);
+
+        // ── Hash du mot de passe avant sauvegarde ────────────────────────────
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
         User savedUser = userRepository.save(user);
 
-        // Créer automatiquement un Mobility Pass
-        mobilityPassService.createMobilityPass(savedUser.getId());
+        if (request.getRole() == Role.USER) {
+            mobilityPassService.createMobilityPass(savedUser.getId());
+        }
 
         log.info("Utilisateur créé avec succès: ID {}", savedUser.getId());
-
         return userMapper.toDto(savedUser);
     }
+
 
     public UserDTO getUserById(UUID id) {
         log.info("Recherche de l'utilisateur avec l'ID: {}", id);
