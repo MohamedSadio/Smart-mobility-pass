@@ -56,6 +56,48 @@ const AdminUsersPage = () => {
         }
     };
 
+    const getStatusColor = (status) => {
+        switch(status) {
+            case 'ACTIVE':
+                return 'bg-green-100 text-green-700';
+            case 'SUSPENDED':
+                return 'bg-yellow-100 text-yellow-700';
+            case 'BLOCKED':
+                return 'bg-red-100 text-red-700';
+            default:
+                return 'bg-slate-100 text-slate-700';
+        }
+    };
+
+    const getStatusLabel = (status) => {
+        switch(status) {
+            case 'ACTIVE':
+                return 'Actif';
+            case 'SUSPENDED':
+                return 'Suspendu';
+            case 'BLOCKED':
+                return 'Bloqué';
+            default:
+                return status;
+        }
+    };
+
+    const handleChangeUserStatus = async (user, newStatus) => {
+        if (user.status === newStatus) return;
+        
+        const statusLabel = getStatusLabel(newStatus);
+        if (window.confirm(`Êtes-vous sûr de vouloir changer le statut en "${statusLabel}"?`)) {
+            try {
+                const updatedUser = await userService.updateUserStatus(user.id, newStatus);
+                setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+                setError(null);
+            } catch (err) {
+                setError('Erreur lors du changement de statut');
+                console.error(err);
+            }
+        }
+    };
+
     const handleOpenCreateModal = () => {
         setSelectedUser(null);
         setIsModalOpen(true);
@@ -173,12 +215,8 @@ const AdminUsersPage = () => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-sm">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                        user.status === 'ACTIVE'
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-yellow-100 text-yellow-700'
-                                    }`}>
-                                        {user.status === 'ACTIVE' ? 'Actif' : 'Inactif'}
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(user.status)}`}>
+                                        {getStatusLabel(user.status)}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-sm">
@@ -186,12 +224,23 @@ const AdminUsersPage = () => {
                                         <button 
                                             onClick={() => handleOpenEditModal(user)}
                                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Éditer l'utilisateur"
                                         >
                                             <Edit className="w-4 h-4" />
                                         </button>
+                                        <select
+                                            value={user.status}
+                                            onChange={(e) => handleChangeUserStatus(user, e.target.value)}
+                                            className={`text-xs font-bold px-2 py-1 rounded-lg border-0 cursor-pointer transition-colors ${getStatusColor(user.status)} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                        >
+                                            <option value="ACTIVE">Actif</option>
+                                            <option value="SUSPENDED">Suspendu</option>
+                                            <option value="BLOCKED">Bloqué</option>
+                                        </select>
                                         <button
                                             onClick={() => handleDelete(user.id)}
                                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Supprimer l'utilisateur"
                                         >
                                             <Trash className="w-4 h-4" />
                                         </button>

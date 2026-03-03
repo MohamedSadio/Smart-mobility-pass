@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, MapPin, CreditCard, LogOut, User, Activity, Users, BarChart3, Bell } from 'lucide-react';
+import { Home, MapPin, CreditCard, LogOut, User, Activity, Users, BarChart3, Bell, Shield } from 'lucide-react';
 import notificationService from '../services/notificationService';
 
 const Layout = () => {
@@ -36,6 +36,7 @@ const Layout = () => {
     ];
 
     const adminNavigation = [
+        { name: 'Panneau d\'administration', href: '/admin', icon: Shield },
         { name: 'Gestion Utilisateurs', href: '/admin/users', icon: Users },
         { name: 'Statistiques', href: '/admin/stats', icon: BarChart3 },
     ];
@@ -48,9 +49,7 @@ const Layout = () => {
             {/* Sidebar */}
             <div className="w-72 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
                 <div className="h-24 flex items-center px-8 border-b border-slate-100/50">
-                    <div className="bg-indigo-600 p-2 rounded-xl mr-3 shadow-lg shadow-indigo-600/20">
-                        <Activity className="text-white w-6 h-6" />
-                    </div>
+                    <img src="/logo.svg" alt="Smart Mobility Logo" className="w-8 h-8 mr-3" />
                     <span className="text-xl font-extrabold text-slate-800 tracking-tight">Smart Mobility</span>
                 </div>
 

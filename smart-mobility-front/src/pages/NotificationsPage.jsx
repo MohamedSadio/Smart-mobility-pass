@@ -32,10 +32,15 @@ const NotificationsPage = () => {
             setLoading(true);
             setError(null);
             const response = await notificationService.getAllNotifications(user.userId);
+            console.log('Notifications fetched:', response);
             setNotifications(response);
+            
+            // Calculer le nombre de notifications non lues
+            const unreadCount = response.filter(n => !n.isRead).length;
+            setUnreadCount(unreadCount);
         } catch (err) {
             setError('Erreur lors du chargement des notifications');
-            console.error(err);
+            console.error('Error fetching notifications:', err);
         } finally {
             setLoading(false);
         }
@@ -56,14 +61,22 @@ const NotificationsPage = () => {
         if (isRead) return; // Already read
         
         try {
-            await notificationService.markAsRead(notificationId);
-            setNotifications(notifications.map(n =>
+            console.log('Marking notification as read:', notificationId);
+            const response = await notificationService.markAsRead(notificationId);
+            console.log('Response:', response);
+            
+            // Mettre à jour l'état local immédiatement
+            const updatedNotifications = notifications.map(n =>
                 n.id === notificationId ? { ...n, isRead: true } : n
-            ));
-            updateUnreadCount();
+            );
+            setNotifications(updatedNotifications);
+            
+            // Recalculer le nombre de notifications non lues
+            const newUnreadCount = updatedNotifications.filter(n => !n.isRead).length;
+            setUnreadCount(newUnreadCount);
         } catch (err) {
-            setError('Erreur lors de la mise à jour');
-            console.error(err);
+            setError('Erreur lors de la mise à jour de la notification');
+            console.error('Error marking as read:', err);
         }
     };
 
@@ -71,12 +84,16 @@ const NotificationsPage = () => {
         if (unreadCount === 0) return;
         
         try {
+            console.log('Marking all notifications as read for user:', user.userId);
             await notificationService.markAllAsRead(user.userId);
-            setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+            console.log('All marked as read, refreshing...');
+            
+            // Rafraîchir les notifications depuis le serveur
+            await fetchNotifications();
             setUnreadCount(0);
         } catch (err) {
-            setError('Erreur lors de la mise à jour');
-            console.error(err);
+            setError('Erreur lors de la mise à jour des notifications');
+            console.error('Error marking all as read:', err);
         }
     };
 
