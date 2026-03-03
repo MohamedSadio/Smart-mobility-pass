@@ -136,9 +136,9 @@ public class UserController {
      * DELETE /api/users/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+    public ResponseEntity<UserDTO> deleteUser(@PathVariable UUID id) {
         log.info("REST - Suppression de l'utilisateur: {}", id);
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        UserDTO deletedUser = userService.deleteUser(id);
+        return ResponseEntity.ok(deletedUser);
     }
 }

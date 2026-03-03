@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer; // <-- Ajout de cet import
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -20,11 +21,17 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
+                // 1. Activer l'intégration CORS dans Spring Security
+                .cors(Customizer.withDefaults())
+
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
 
                 .authorizeExchange(exchanges -> exchanges
+
+                        // 2. LAISSER PASSER TOUTES LES REQUÊTES PREFLIGHT (OPTIONS)
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // ── Routes publiques ──────────────────────────────
                         .pathMatchers(HttpMethod.POST, "/auth/api/auth/register").permitAll()

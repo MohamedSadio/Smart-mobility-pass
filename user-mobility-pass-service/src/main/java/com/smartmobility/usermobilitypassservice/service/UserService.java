@@ -180,15 +180,15 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUser(UUID id) {
-        log.info("Suppression de l'utilisateur: {}", id);
+    public UserDTO deleteUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'ID: " + id));
 
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Utilisateur non trouvé avec l'ID: " + id);
-        }
-
+        UserDTO dto = userMapper.toDto(user);
         userRepository.deleteById(id);
-        log.info("Utilisateur supprimé avec succès");
+
+        log.info("Utilisateur supprimé avec succès: {}", id);
+        return dto;
     }
 
     /**
