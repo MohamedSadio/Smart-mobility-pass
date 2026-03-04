@@ -8,6 +8,7 @@ import com.smartmobility.tripmanagementservice.dto.*;
 import com.smartmobility.tripmanagementservice.entity.Trip;
 import com.smartmobility.tripmanagementservice.entity.TransportType;
 import com.smartmobility.tripmanagementservice.entity.TripStatus;
+import com.smartmobility.tripmanagementservice.exception.ServiceUnavailableException;
 import com.smartmobility.tripmanagementservice.exception.TripException;
 import com.smartmobility.tripmanagementservice.mapper.TripMapper;
 import com.smartmobility.tripmanagementservice.repository.TripRepository;
@@ -37,6 +38,7 @@ public class TripService {
     public TripDto.TripResponse registerTrip(TripDto.TripRequest request) {
         log.info("[TRIP] Nouveau trajet — pass={}, transport={}", request.passNumber(), request.transportType());
 
+        Trip trip = new Trip();
         // ── Étape 1 : Vérifier le pass via UserService ───────────────────────
         MobilityPassResponseDto pass = mobilityPassClient.getMobilityPassByPassNumber(request.passNumber());
 
@@ -55,15 +57,23 @@ public class TripService {
         // ── Étape 2 : Calculer le tarif via PricingService ───────────────────
         double distanceKm = getDefaultDistance(request.transportType());
 
-        PricingResponseDto pricing = pricingClient.calculate(Map.of(
-                "userId",           pass.userId(),
-                "passNumber",       request.passNumber(),
-                "transportType",    request.transportType(),
-                "loyaltyPoints",    pass.loyaltyPoints(),
-                "tripTime",         java.time.LocalDateTime.now().toString(),
-                "distanceKm",       distanceKm,
-                "dailySpentAmount", java.math.BigDecimal.ZERO
-        ));
+        PricingResponseDto pricing = null;
+        try {
+            pricing = pricingClient.calculate(Map.of(
+                    "userId",           pass.userId(),
+                    "passNumber",       request.passNumber(),
+                    "transportType",    request.transportType(),
+                    "loyaltyPoints",    pass.loyaltyPoints(),
+                    "tripTime",         java.time.LocalDateTime.now().toString(),
+                    "distanceKm",       distanceKm,
+                    "dailySpentAmount", java.math.BigDecimal.ZERO
+            ));
+        } catch (ServiceUnavailableException e) {
+            trip.setStatus(TripStatus.FAILED);
+            trip.setFailureReason(e.getMessage());
+            tripRepository.save(trip);
+            throw e;
+        }
         log.info("[TRIP] Tarif calculé — base={}, remise={}, final={}",
                 pricing.baseFare(), pricing.totalDiscount(), pricing.finalFare());
 
@@ -89,7 +99,7 @@ public class TripService {
         log.info("[TRIP] Débit effectué — txId={}, nouveau solde={}", billing.transactionId(), billing.newBalance());
 
         // ── Étape 5 : Enregistrer le trajet ──────────────────────────────────
-        Trip trip = new Trip();
+        
         trip.setPassNumber(request.passNumber());
         trip.setUserId(pass.userId());
         trip.setTransportType(TransportType.valueOf(request.transportType()));

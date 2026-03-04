@@ -24,8 +24,8 @@ public class PricingController {
     @Retry(name = "pricingRetry", fallbackMethod = "calculatePriceFallback")
     @PostMapping("/calculate")
     public ResponseEntity<PricingDto.PricingResponse> calculatePrice(
-            @RequestBody PricingDto.PricingRequest request) {
-
+            @RequestBody PricingDto.PricingRequest request){
+        
         String port = environment.getProperty("local.server.port");
 
         log.info("REST [Instance:{}] - Calcul de tarif: userId={}, transport={}",

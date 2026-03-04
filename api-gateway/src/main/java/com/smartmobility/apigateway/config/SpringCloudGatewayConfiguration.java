@@ -25,9 +25,13 @@ public class SpringCloudGatewayConfiguration {
                         .path("/user-mobility-pass/**")
                         .filters(f -> f.rewritePath("/user-mobility-pass/(?<segment>.*)", "/${segment}"))
                         .uri("lb://user-mobility-pass-service"))
-                .route(p->p
+                .route(p -> p
                         .path("/pricing-discount/**")
-                        .filters(f -> f.rewritePath("/pricing-discount/(?<segment>.*)", "/${segment}"))
+                        .filters(f -> f
+                                .rewritePath("/pricing-discount/(?<segment>.*)", "/${segment}")
+                                .circuitBreaker(c -> c
+                                        .setName("pricingCB")
+                                        .setFallbackUri("forward:/fallback/pricing")))
                         .uri("lb://pricing-discount-service"))
                 .route(p->p
                         .path("/billing/**")
